@@ -1,7 +1,7 @@
 services:
   # GitDigest - Resumo Inteligente & Auditoria de Modificações no GitHub em PDF
   - type: web
-    name: gitdigest-summary
+    name: repo-change-summary
     runtime: static
     plan: free
     region: oregon

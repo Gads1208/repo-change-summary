@@ -2,7 +2,11 @@
 
 > **Resumo Inteligente e Relatórios Executivos em PDF de Modificações no GitHub.**
 
-O **GitDigest** é uma aplicação web moderna que se conecta à API do GitHub, lista repositórios da sua conta (ou qualquer repositório público), analisa o histórico de commits e comparações entre branches, categoriza as modificações e gera um **relatório executivo em PDF** profissional pronto para download ou impressão.
+[![Render Deployment](https://img.shields.io/badge/Render-Live%20Demo-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://repo-change-summary.onrender.com)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+👉 **[Acessar a Aplicação Online no Render: https://repo-change-summary.onrender.com](https://repo-change-summary.onrender.com)**
 
 ---
 
