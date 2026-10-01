@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitDigest - Resumo de Modificações no GitHub em PDF</title>
+  <meta name="description" content="Conecte seu repositório GitHub, analise branches, gere resumos inteligentes com IA e exporte relatórios executivos em PDF com todas as modificações.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><circle cx='18' cy='6' r='3'/><circle cx='6' cy='18' r='3'/><path d='M18 9a9 9 0 0 1-9 9' stroke='%236366f1' stroke-width='2'/></svg>">
+
+  <!-- Application Styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- html2pdf bundle -->
+  <script src="libs/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="container header-content">
+      <div class="brand" id="brand-home-btn">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="3" x2="6" y2="15"></line>
+            <circle cx="18" cy="6" r="3"></circle>
+            <circle cx="6" cy="18" r="3"></circle>
+            <path d="M18 9a9 9 0 0 1-9 9"></path>
+          </svg>
+        </div>
+        <div>
+          <span class="brand-title">GitDigest</span>
+          <span class="brand-badge">PDF & IA</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="auth-status-pill" id="header-auth-pill">
+          <span class="status-dot" id="header-status-dot"></span>
+          <span id="header-status-text">Desconectado</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="header-disconnect-btn" style="display: none;">
+          Desconectar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" style="flex: 1; padding-bottom: 4rem;">
+
+    <!-- Stepper Navigation -->
+    <nav class="stepper-nav" aria-label="Progresso da Análise">
+      <div class="step-item active" id="step-nav-1" data-step="1">
+        <div class="step-number">1</div>
+        <span class="step-label">Conexão</span>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step-item" id="step-nav-2" data-step="2">
+        <div class="step-number">2</div>
+        <span class="step-label">Repositórios</span>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step-item" id="step-nav-3" data-step="3">
+        <div class="step-number">3</div>
+        <span class="step-label">Análise de Branches</span>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step-item" id="step-nav-4" data-step="4">
+        <div class="step-number">4</div>
+        <span class="step-label">Relatório & PDF</span>
+      </div>
+    </nav>
+
+    <!-- STEP 1: CONEXÃO E CONFIGURAÇÕES -->
+    <section class="app-view active" id="view-step-1">
+      <div class="glass-panel">
+        <h1 class="hero-title">Conecte sua conta do GitHub</h1>
+        <p class="hero-subtitle">
+          Gere relatórios executivos em PDF com rastreabilidade completa das branches, commits, novos recursos e correções de qualquer repositório.
+        </p>
+
+        <div class="info-notice">
+          <div class="info-notice-icon">💡</div>
+          <div class="info-notice-text">
+            <strong>Como funciona a autenticação com Token de Acesso (PAT)?</strong><br>
+            O Personal Access Token permite que a aplicação consulte seus repositórios públicos e privados sem expor sua senha. Seus dados ficam salvos apenas localmente no seu navegador.
+          </div>
+        </div>
+
+        <form id="auth-form" style="max-width: 680px;">
+          <!-- GitHub Token -->
+          <div class="form-group">
+            <label class="form-label" for="gh-token-input">
+              GitHub Personal Access Token (PAT)
+            </label>
+            <div class="input-wrapper">
+              <input 
+                type="password" 
+                id="gh-token-input" 
+                class="form-input" 
+                placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                autocomplete="off"
+              >
+              <button type="button" class="input-icon-right" id="toggle-token-visibility" title="Mostrar/ocultar token">
+                👁️
+              </button>
+            </div>
+            <p class="form-hint">
+              Requer permissão de leitura de repositórios (<code>repo</code> ou apenas público). 
+              <a href="https://github.com/settings/tokens/new?scopes=repo&description=GitDigest" target="_blank" rel="noopener" style="color: var(--accent-indigo); font-weight: 600;">
+                Criar token no GitHub ↗
+              </a>
+            </p>
+          </div>
+
+          <!-- Gemini API Key (Optional) -->
+          <div class="form-group">
+            <label class="form-label" for="gemini-key-input">
+              Chave da API Gemini (Opcional - para Resumo Executivo com IA)
+            </label>
+            <div class="input-wrapper">
+              <input 
+                type="password" 
+                id="gemini-key-input" 
+                class="form-input" 
+                placeholder="AIzaSy..."
+                autocomplete="off"
+              >
+            </div>
+            <p class="form-hint">
+              Se não informada, o GitDigest gerará um resumo analítico heurístico completo automaticamente.
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color: var(--accent-cyan); font-weight: 600;">
+                Obter chave gratuita no Google AI Studio ↗
+              </a>
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 1rem; align-items: center; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" id="btn-connect">
+              <span>Conectar e Listar Repositórios</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+
+            <button type="button" class="btn btn-secondary" id="btn-continue-anonymous">
+              Explorar sem Token (Público)
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- STEP 2: SELEÇÃO DE REPOSITÓRIO -->
+    <section class="app-view" id="view-step-2">
+      <!-- User Profile Header -->
+      <div class="user-profile-bar" id="user-profile-bar">
+        <div class="user-profile-info">
+          <img src="" alt="Avatar" class="user-avatar" id="user-avatar-img">
+          <div>
+            <div class="user-name" id="user-name-text">Carregando...</div>
+            <div class="user-login" id="user-login-text">@usuario</div>
+          </div>
+        </div>
+        <div class="rate-limit-pill" id="rate-limit-pill">
+          Requisições restantes: <strong id="rate-remaining">--</strong> / <span id="rate-total">--</span>
+        </div>
+      </div>
+
+      <!-- Controls & Filters -->
+      <div class="repo-controls">
+        <div class="repo-search-box">
+          <input 
+            type="text" 
+            id="repo-search-input" 
+            class="form-input" 
+            placeholder="Filtrar repositório por nome ou descrição..."
+          >
+        </div>
+
+        <div class="repo-filters">
+          <button class="filter-chip active" data-filter="all">Todos</button>
+          <button class="filter-chip" data-filter="public">Públicos</button>
+          <button class="filter-chip" data-filter="private">Privados</button>
+          <button class="filter-chip" data-filter="sources">Originais</button>
+          <button class="filter-chip" data-filter="forks">Forks</button>
+        </div>
+      </div>
+
+      <!-- Quick Custom Repo Input -->
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">
+          Quer analisar outro repositório público que não está na sua lista?
+        </span>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" id="custom-repo-input" class="form-input" placeholder="ex: vercel/next.js" style="width: 220px; padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+          <button class="btn btn-secondary btn-sm" id="btn-load-custom-repo">Carregar</button>
+        </div>
+      </div>
+
+      <!-- Repositories Grid Container -->
+      <div class="repo-grid" id="repo-grid-container">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Loading State for Repos -->
+      <div class="loading-box" id="repos-loading" style="display: none;">
+        <div class="spinner"></div>
+        <div class="loading-text">Buscando repositórios no GitHub...</div>
+        <div class="loading-subtext">Isso pode levar alguns segundos de acordo com o total de repositórios.</div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="glass-panel" id="repos-empty" style="display: none; text-align: center; padding: 3rem 1rem;">
+        <h3 style="margin-bottom: 0.5rem;">Nenhum repositório encontrado</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Tente ajustar os filtros de busca ou verifique se o seu token possui permissão de leitura.</p>
+      </div>
+    </section>
+
+    <!-- STEP 3: ANÁLISE DE BRANCHES E MODIFICAÇÕES -->
+    <section class="app-view" id="view-step-3">
+      <div class="glass-panel">
+        <div class="analysis-header-card">
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-indigo); font-weight: 700;">Repositório Selecionado</span>
+            <h2 id="selected-repo-title" style="font-size: 1.5rem; margin-top: 2px;">nome/repositorio</h2>
+            <p id="selected-repo-desc" style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">Descrição do repositório</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-change-repo">
+            ← Trocar Repositório
+          </button>
+        </div>
+
+        <h3 style="margin-bottom: 1rem;">Selecione o Modo de Análise</h3>
+
+        <!-- Analysis Modes -->
+        <div class="analysis-mode-selector">
+          <div class="mode-card active" data-mode="single_branch" id="mode-single">
+            <div class="mode-card-title">
+              <span>🌿</span> Branch Específica
+            </div>
+            <div class="mode-card-desc">
+              Analisa o histórico completo e recentes modificações da branch selecionada.
+            </div>
+          </div>
+
+          <div class="mode-card" data-mode="compare_branches" id="mode-compare">
+            <div class="mode-card-title">
+              <span>🔀</span> Comparar 2 Branches
+            </div>
+            <div class="mode-card-desc">
+              Compara a diferença exata entre duas branches (ex: feature vs main).
+            </div>
+          </div>
+
+          <div class="mode-card" data-mode="all_recent" id="mode-all-recent">
+            <div class="mode-card-title">
+              <span>📊</span> Resumo Global
+            </div>
+            <div class="mode-card-desc">
+              Consolida commits recentes e pull requests de todo o ciclo de desenvolvimento.
+            </div>
+          </div>
+        </div>
+
+        <!-- Scope & Branch Selectors -->
+        <div class="grid-2" style="margin-bottom: 1.5rem;">
+          <!-- Primary Branch Select -->
+          <div class="form-group" id="branch-primary-group">
+            <label class="form-label" for="branch-primary-select" id="branch-primary-label">Branch a Analisar</label>
+            <select class="form-select" id="branch-primary-select">
+              <option value="">Carregando branches...</option>
+            </select>
+          </div>
+
+          <!-- Secondary Branch Select (Compare mode) -->
+          <div class="form-group" id="branch-compare-group" style="display: none;">
+            <label class="form-label" for="branch-compare-select">Branch Base de Comparação</label>
+            <select class="form-select" id="branch-compare-select">
+              <option value="">Carregando branches...</option>
+            </select>
+          </div>
+
+          <!-- Commit Limit -->
+          <div class="form-group">
+            <label class="form-label" for="commits-limit-select">Volume de Commits</label>
+            <select class="form-select" id="commits-limit-select">
+              <option value="30">Últimos 30 commits (Rápido)</option>
+              <option value="50" selected>Últimos 50 commits (Recomendado)</option>
+              <option value="100">Últimos 100 commits (Aprofundado)</option>
+            </select>
+          </div>
+
+          <!-- Time Window -->
+          <div class="form-group">
+            <label class="form-label" for="period-filter-select">Janela de Tempo</label>
+            <select class="form-select" id="period-filter-select">
+              <option value="all" selected>Todo o histórico recente</option>
+              <option value="7">Últimos 7 dias</option>
+              <option value="15">Últimos 15 dias</option>
+              <option value="30">Últimos 30 dias</option>
+              <option value="90">Últimos 90 dias</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Additional Options -->
+        <div style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+            <input type="checkbox" id="opt-include-prs" checked style="accent-color: var(--accent-indigo); width: 16px; height: 16px;">
+            <span>Incluir Pull Requests recentes no relatório</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+            <input type="checkbox" id="opt-ai-summary" checked style="accent-color: var(--accent-indigo); width: 16px; height: 16px;">
+            <span>Gerar síntese executiva inteligente das modificações</span>
+          </label>
+        </div>
+
+        <!-- Action Button -->
+        <button class="btn btn-primary" id="btn-start-analysis" style="font-size: 1.05rem; padding: 0.9rem 2rem;">
+          <span>Analisar Modificações e Gerar Relatório</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Analysis Progress Box -->
+      <div class="glass-panel loading-box" id="analysis-loading" style="display: none;">
+        <div class="spinner"></div>
+        <div class="loading-text" id="analysis-loading-text">Analisando histórico de branches e commits...</div>
+        <div class="loading-subtext" id="analysis-loading-subtext">Processando diferenças, categorizando alterações e sintetizando relatório.</div>
+      </div>
+    </section>
+
+    <!-- STEP 4: RELATÓRIO E EXPORTAÇÃO EM PDF -->
+    <section class="app-view" id="view-step-4">
+      <!-- Actions Bar -->
+      <div class="report-actions-bar">
+        <div class="report-actions-left">
+          <button class="btn btn-secondary btn-sm" id="btn-back-to-config">
+            ← Alterar Análise
+          </button>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">
+            Relatório gerado com sucesso
+          </span>
+        </div>
+
+        <div class="report-actions-right">
+          <button class="btn btn-secondary btn-sm" id="btn-print-report" title="Imprimir usando diálogo nativo do navegador">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Imprimir
+          </button>
+
+          <button class="btn btn-emerald" id="btn-download-pdf">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span id="btn-download-pdf-text">Baixar Relatório em PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PDF Canvas / Preview Container -->
+      <div class="pdf-container-wrapper">
+        <div id="pdf-render-area">
+          <!-- Dynamically inserted by app.js -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- Main Application Logic -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+.DS_Store
+*.log
+server.log
+__pycache__/
+.env
+.env.local
+.vscode/
+.idea/
